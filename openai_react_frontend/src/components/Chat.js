@@ -10,18 +10,30 @@ const Chat = () => {
     const userMessage = { role: "user", content: input };
     setMessages([...messages, userMessage]);
 
-    const response = await fetch("http://localhost:8080/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input }),
-    });
+    try {
+      const response = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
 
-    const data = await response.json();
-    const botMessage = { role: "assistant", content: data.choices[0].message.content };
+      const data = await response.json();
 
-    setMessages([...messages, userMessage, botMessage]);
+      // Extract the message content correctly from the deeply nested structure
+      const botMessageContent =
+        data.choices?.[0]?.message?.content?.choices?.[0]?.message?.content || "Error retrieving response";
+
+      const botMessage = { role: "assistant", content: botMessageContent };
+
+      setMessages((prevMessages) => [...prevMessages, userMessage, botMessage]);
+    } catch (error) {
+      console.error("Error fetching response:", error);
+    }
+
     setInput("");
   };
+
+
 
   return (
     <div style={{ padding: 20 }}>
