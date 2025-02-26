@@ -24,12 +24,10 @@ public class OpenAIController {
     public Mono<Map<String, String>> chat(@RequestHeader(value = "sessionId", required = false) String sessionId,
                                           @RequestBody Map<String, String> request) {
         if (sessionId == null || sessionId.isEmpty()) {
-            sessionId = UUID.randomUUID().toString(); // Generate a new session ID if not provided
-//            return Mono.just(Map.of("content", "Session expired. Please start a new chat."));
+            sessionId = UUID.randomUUID().toString();
         }
         String userMessage = request.get("message");
 
-        return openAIService.getChatResponse(sessionId, userMessage)
-                .map(response -> response); // Return simple key-value JSON
+        return openAIService.getChatResponse(sessionId, userMessage);
     }
 }
