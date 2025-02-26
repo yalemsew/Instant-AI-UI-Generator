@@ -25,6 +25,7 @@ public class OpenAIController {
                                           @RequestBody Map<String, String> request) {
         if (sessionId == null || sessionId.isEmpty()) {
             sessionId = UUID.randomUUID().toString(); // Generate a new session ID if not provided
+//            return Mono.just(Map.of("content", "Session expired. Please start a new chat."));
         }
         String userMessage = request.get("message");
 
