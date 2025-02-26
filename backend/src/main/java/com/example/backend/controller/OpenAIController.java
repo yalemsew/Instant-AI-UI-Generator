@@ -21,7 +21,7 @@ public class OpenAIController {
     }
 
     @PostMapping
-    public Mono<Map<String, Object>> chat(@RequestHeader(value = "sessionId", required = false) String sessionId,
+    public Mono<Map<String, String>> chat(@RequestHeader(value = "sessionId", required = false) String sessionId,
                                           @RequestBody Map<String, String> request) {
         if (sessionId == null || sessionId.isEmpty()) {
             sessionId = UUID.randomUUID().toString(); // Generate a new session ID if not provided
@@ -29,11 +29,6 @@ public class OpenAIController {
         String userMessage = request.get("message");
 
         return openAIService.getChatResponse(sessionId, userMessage)
-                .map(response -> {
-                    Map<String, Object> responseBody = new HashMap<>();
-                    responseBody.put("choices", List.of(Map.of("message", Map.of("content", response))));
-                    return responseBody;
-                });
+                .map(response -> response); // Return simple key-value JSON
     }
-
 }
