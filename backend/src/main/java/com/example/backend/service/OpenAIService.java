@@ -22,8 +22,8 @@ public class OpenAIService {
     private final WebClient webClient;
     private final Map<String, List<Map<String, String>>> chatHistories = new HashMap<>();
 
-    public OpenAIService() {
-        this.webClient = WebClient.builder()
+    public OpenAIService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder
                 .baseUrl("https://api.openai.com/v1/chat/completions")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
@@ -71,23 +71,29 @@ public class OpenAIService {
                 .replaceAll("<.*?>", "")              // Remove HTML tags
                 .trim();
     }
-
-    // Extracts clean HTML while handling inline styles
-    // Extracts clean HTML while handling Markdown formatting
-    private String extractHTML(String text) {
+    // Extracts clean HTML while removing Markdown artifacts, newlines (\n), and extra spaces
+    public String extractHTML(String text) {
         // Remove Markdown artifacts (```html, ```)
         text = text.replace("```html", "").replace("```", "").trim();
 
-        // Regex to find common UI elements (button, input, div, form, p, etc.)
+        // Regex to extract valid HTML components (button, input, form, div, etc.)
         Pattern pattern = Pattern.compile("(?s)(<button.*?</button>|<input.*?>|<form.*?</form>|<div.*?</div>|<span.*?</span>|<p.*?</p>|<h[1-6].*?</h[1-6]>)");
         Matcher matcher = pattern.matcher(text);
 
-        // Extract the first matched HTML component
-        return matcher.find() ? matcher.group(1) : "";
+        if (matcher.find()) {
+            String rawHTML = matcher.group(1);
+
+            // Clean up formatting
+            return rawHTML.replaceAll("\\n+", " ") // Remove newlines
+                    .replaceAll("\\s{2,}", " ") // Remove extra spaces
+                    .replace("\\", "") // Remove backslashes
+                    .trim();
+        }
+        return "";
     }
 
-    // Extracts only the CSS styles while removing Markdown artifacts and inline comments
-    private String extractCSS(String text) {
+
+    public String extractCSS(String text) {
         Pattern pattern = Pattern.compile("(?s)<style>(.*?)</style>");
         Matcher matcher = pattern.matcher(text);
         if (matcher.find()) {
@@ -99,13 +105,17 @@ public class OpenAIService {
             // Remove inline comments /* ... */
             rawCSS = rawCSS.replaceAll("/\\*.*?\\*/", "").trim();
 
-            // Normalize spacing and indentation
-            rawCSS = rawCSS.replaceAll("\\n\\s*", "\n").trim();
+            // Remove all backslashes (\) and newlines (\n), then normalize spaces
+            rawCSS = rawCSS.replace("\\", "") // Remove backslashes
+                    .replaceAll("\\n+", " ") // Remove newlines and replace with a single space
+                    .replaceAll("\\s{2,}", " ") // Remove excessive spaces
+                    .trim();
 
             return rawCSS;
         }
         return "";
     }
+
 
 
 }
