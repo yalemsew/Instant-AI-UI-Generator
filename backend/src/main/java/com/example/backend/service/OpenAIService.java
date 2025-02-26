@@ -26,7 +26,7 @@ public class OpenAIService {
                 .build();
     }
 
-    public Mono<Map<String, Object>> getChatResponse(String sessionId, String message) {
+    public Mono<Map<String, String>> getChatResponse(String sessionId, String message) {
         chatHistories.putIfAbsent(sessionId, new ArrayList<>());
         List<Map<String, String>> messages = chatHistories.get(sessionId);
 
@@ -48,9 +48,12 @@ public class OpenAIService {
 
                     messages.add(Map.of("role", "assistant", "content", content));
 
-                    // Return a structured JSON response
-                    return Map.of("choices", List.of(Map.of("message", Map.of("content", content))));
+                    // Return only a key-value JSON response { "content": "response text" }
+                    return Map.of("content", content);
                 });
+    }
+    public void clearChatHistory(String sessionId) {
+        chatHistories.remove(sessionId);
     }
 
 }
